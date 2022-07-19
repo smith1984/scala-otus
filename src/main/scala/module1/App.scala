@@ -12,6 +12,9 @@ object App {
 //
 //    println("Hello world")
 
-    list
+    functions.filteredEvent(Array(1,2,3,4,5,6)).foreach(println)
+    functions.filteredOdd(Array(1,2,3,4,5,6)).foreach(println)
+
+    (0 to 10).toList.foreach( x => println(recursion.fiboTailRec(x)))
   }
 }
