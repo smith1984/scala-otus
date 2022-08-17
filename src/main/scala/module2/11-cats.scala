@@ -254,8 +254,6 @@ object cats_type_classes{
     def apply[A](implicit ev: Monoid[A]) = ev
   }
 
-  def combineAll[A: Monoid](l: List[A]): A =
-      l.foldLeft(Monoid[A].empty)(Monoid[A].combine(_, _))
 
   // Functor
 
