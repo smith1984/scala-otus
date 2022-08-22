@@ -80,11 +80,7 @@ object App {
 //    println(validation.validateUserDataI(UserDTO("", "", 30)))
 
      // val r: () => Unit = functional_effects.functionalProgram.executableEncoding.greet2.run
-     val p2 = for{
-       _ <- Console.printLine("Как тебя зовут?")
-       str <- Console.readLine
-       _ <- Console.printLine(s"Привет, $str")
-     } yield ()
+
 
     functional_effects.functionalProgram.declarativeEncoding.interpret(
        functional_effects.functionalProgram.declarativeEncoding.p2)
