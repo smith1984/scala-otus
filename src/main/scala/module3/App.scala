@@ -13,5 +13,6 @@ object App {
 
 object ZioApp extends zio.App{
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
-    zioRecursion.factorialZ(50000).flatMap(i => ZIO.effect(println(i))).exitCode
+    zioConcurrency.printEffectRunningTime(zioConcurrency.p3)
+      .exitCode
 }
