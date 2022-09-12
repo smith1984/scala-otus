@@ -13,3 +13,5 @@ lazy val root = (project in file("."))
     libraryDependencies ++= zio,
     addCompilerPlugin(Dependencies.kindProjector)
   )
+
+scalacOptions += "-Ymacro-annotations"
