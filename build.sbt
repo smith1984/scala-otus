@@ -11,6 +11,7 @@ lazy val root = (project in file("."))
     libraryDependencies += scalaTest % Test,
     libraryDependencies += catsCore,
     libraryDependencies ++= zio,
+    libraryDependencies ++= zioConfig,
     addCompilerPlugin(Dependencies.kindProjector)
   )
 
