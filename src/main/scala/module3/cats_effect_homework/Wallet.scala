@@ -4,7 +4,7 @@ import cats.effect.Sync
 import cats.implicits._
 import Wallet._
 
-import java.nio.file.StandardOpenOption
+import java.nio.file.{Path, StandardOpenOption}
 
 // DSL управления электронным кошельком
 trait Wallet[F[_]] {
@@ -29,8 +29,8 @@ trait Wallet[F[_]] {
 final class FileWallet[F[_]: Sync](id: WalletId) extends Wallet[F] {
 
   def balance: F[BigDecimal] = for {
-    path <- Sync[F].pure(java.nio.file.Paths.get(id))
-    lstLines <- Sync[F].pure(java.nio.file.Files.readAllLines(path))
+    path <- Sync[F].delay(java.nio.file.Paths.get(id))
+    lstLines <- Sync[F].delay(java.nio.file.Files.readAllLines(path))
     strBalance <- Sync[F].pure(lstLines.get(0))
     balance <- Sync[F].pure(BigDecimal(strBalance))
   } yield balance
@@ -38,8 +38,8 @@ final class FileWallet[F[_]: Sync](id: WalletId) extends Wallet[F] {
   def topup(amount: BigDecimal): F[Unit] = for {
     balanceCurrent <- balance
     balanceNew <- Sync[F].pure(balanceCurrent + amount)
-    path <- Sync[F].pure(java.nio.file.Paths.get(id))
-    _ <- Sync[F].pure(
+    path <- Sync[F].delay(java.nio.file.Paths.get(id))
+    _ <- Sync[F].delay(
       java.nio.file.Files.write(
         path,
         balanceNew.toString().getBytes()
@@ -47,20 +47,19 @@ final class FileWallet[F[_]: Sync](id: WalletId) extends Wallet[F] {
     )
   } yield ()
 
-  def withdraw(amount: BigDecimal): F[Either[WalletError, Unit]] = for {
-    balanceCurrent <- balance
-    balanceNew <- Sync[F].pure(
-      Either.cond(balanceCurrent >= amount, balanceCurrent - amount, BalanceTooLow)
-    )
-    path <- Sync[F].pure(java.nio.file.Paths.get(id))
-    balanceNewFromEither <- Sync[F].fromEither(balanceNew)
-    _ <- Sync[F].pure(
-      java.nio.file.Files.write(
-        path,
-        balanceNewFromEither.toString().getBytes()
-      )
-    )
-  } yield balanceNew.void
+  def withdraw(amount: BigDecimal): F[Either[WalletError, Unit]] = {
+    for {
+      balanceCurrent <- balance
+      balanceNew <- Sync[F].pure(Either.cond(balanceCurrent >= amount, balanceCurrent - amount, BalanceTooLow))
+      path <- Sync[F].delay(java.nio.file.Paths.get(id))
+      result <- Sync[F].delay( balanceNew match {
+        case Left(error) => Left(error)
+        case Right(_) =>
+          java.nio.file.Files.write(path, balanceNew.toOption.get.toString().getBytes())
+          Right(())
+    })
+    } yield result
+  }
 }
 
 object Wallet {
@@ -81,6 +80,6 @@ object Wallet {
 
   type WalletId = String
 
-  sealed trait WalletError extends Throwable
+  sealed trait WalletError
   case object BalanceTooLow extends WalletError
 }
