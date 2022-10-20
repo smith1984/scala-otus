@@ -1,26 +1,13 @@
 package module4.phoneBook
 
-import cats.effect.{ExitCode => CatsExitCode}
-import cats.syntax.all._
-import org.http4s.implicits._
-import org.http4s.server.Router
+import module4.phoneBook.api.PhoneBookAPI
+import module4.phoneBook.configuration._
+import module4.phoneBook.dao.repositories.{AddressRepository, PhoneRecordRepository}
+import module4.phoneBook.db._
+import module4.phoneBook.services.PhoneBookService
 import zio.blocking.Blocking
 import zio.clock.Clock
-import zio.{RIO, ZIO}
-import zio.{ZLayer, Layer}
-import zio.config.ReadError
-import configuration._
-import org.http4s.HttpRoutes
-import configuration._
-import module4.phoneBook.services.PhoneBookService
-import module4.phoneBook.db._
 import zio.random.Random
-import module4.phoneBook.dao.repositories.{PhoneRecordRepository, AddressRepository}
-import zio.Has
-import module4.phoneBook.api.PhoneBookAPI
-import module4.phoneBook.dto.PhoneRecordDTO
-import zhttp.http.{Http, Request, Response}
-import io.circe._, io.circe.generic.semiauto._
 
 object App {
 

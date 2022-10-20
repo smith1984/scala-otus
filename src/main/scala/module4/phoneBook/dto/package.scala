@@ -1,14 +1,10 @@
 package module4.phoneBook
 
-import io.circe.generic.semiauto.{deriveCodec, deriveDecoder}
-
-import scala.util.Success
-import scala.util.Failure
-import org.http4s.dsl.impl.PathVar
-import io.circe._, io.circe.generic.semiauto._
-
-import scala.util.Try
+import io.circe._
+import io.circe.generic.semiauto._
 import module4.phoneBook.dao.entities.PhoneRecord
+
+import scala.util.{Failure, Success, Try}
 
 package object dto {
 
