@@ -4,6 +4,8 @@ import cats.effect.Sync
 import cats.implicits._
 import Wallet._
 
+import java.nio.file.{Path, StandardOpenOption}
+
 // DSL управления электронным кошельком
 trait Wallet[F[_]] {
   // возвращает текущий баланс
@@ -25,9 +27,39 @@ trait Wallet[F[_]] {
 // - java.nio.file.Files.exists
 // - java.nio.file.Paths.get
 final class FileWallet[F[_]: Sync](id: WalletId) extends Wallet[F] {
-  def balance: F[BigDecimal] = ???
-  def topup(amount: BigDecimal): F[Unit] = ???
-  def withdraw(amount: BigDecimal): F[Either[WalletError, Unit]] = ???
+
+  def balance: F[BigDecimal] = for {
+    path <- Sync[F].delay(java.nio.file.Paths.get(id))
+    lstLines <- Sync[F].delay(java.nio.file.Files.readAllLines(path))
+    strBalance <- Sync[F].pure(lstLines.get(0))
+    balance <- Sync[F].pure(BigDecimal(strBalance))
+  } yield balance
+
+  def topup(amount: BigDecimal): F[Unit] = for {
+    balanceCurrent <- balance
+    balanceNew <- Sync[F].pure(balanceCurrent + amount)
+    path <- Sync[F].delay(java.nio.file.Paths.get(id))
+    _ <- Sync[F].delay(
+      java.nio.file.Files.write(
+        path,
+        balanceNew.toString().getBytes()
+      )
+    )
+  } yield ()
+
+  def withdraw(amount: BigDecimal): F[Either[WalletError, Unit]] = {
+    for {
+      balanceCurrent <- balance
+      balanceNew <- Sync[F].pure(Either.cond(balanceCurrent >= amount, balanceCurrent - amount, BalanceTooLow))
+      path <- Sync[F].delay(java.nio.file.Paths.get(id))
+      result <- Sync[F].delay( balanceNew match {
+        case Left(error) => Left(error)
+        case Right(_) =>
+          java.nio.file.Files.write(path, balanceNew.toOption.get.toString().getBytes())
+          Right(())
+    })
+    } yield result
+  }
 }
 
 object Wallet {
@@ -37,7 +69,14 @@ object Wallet {
   // Здесь нужно использовать обобщенную версию уже пройденного вами метода IO.delay,
   // вызывается она так: Sync[F].delay(...)
   // Тайпкласс Sync из cats-effect описывает возможность заворачивания сайд-эффектов
-  def fileWallet[F[_]: Sync](id: WalletId): F[Wallet[F]] = ???
+  def fileWallet[F[_]: Sync](id: WalletId): F[Wallet[F]] = for {
+    _ <- Sync[F].delay(
+      java.nio.file.Files.write(
+        java.nio.file.Paths.get(id),
+        "0.0".getBytes()
+      )
+    )
+  } yield new FileWallet[F](id)
 
   type WalletId = String
 
