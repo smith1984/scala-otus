@@ -311,10 +311,25 @@ object promise{
       val p = Promise[T]
       val timer = new Timer(true)
       val task = new TimerTask {
-        override def run(): Unit = ???
+        override def run(): Unit = {
+          p.tryFailure(new Exception())
+        }
       }
       timer.schedule(task, timeout)
-      ???
+      p.future
+        .map { a =>
+          if (p.trySuccess(a)) {
+            task.cancel()
+          }
+        }
+        .recover {
+          case e: Exception =>
+            if (p.tryFailure(e)) {
+              task.cancel()
+            }
+        }
+
+      p.future
     }
   }
 }
